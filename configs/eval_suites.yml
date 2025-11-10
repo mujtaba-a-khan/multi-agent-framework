@@ -1,0 +1,4 @@
+# Optional registry if you want to refer by name
+suites:
+  harmless: data/prompts/harmless.jsonl
+  harmful_jailbreak: data/prompts/harmful_jailbreak.jsonl

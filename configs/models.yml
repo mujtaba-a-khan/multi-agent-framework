@@ -1,0 +1,10 @@
+openai:
+  gpt-4o-mini:
+    model: "gpt-4o-mini"
+    temperature: 0.2
+    max_tokens: 512
+local:
+  llama-3-8b:
+    endpoint: "http://localhost:11434"
+    model: "llama3:8b"
+    temperature: 0.2

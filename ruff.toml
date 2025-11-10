@@ -1,0 +1,5 @@
+line-length = 100
+target-version = "py311"
+lint.select = ["E","F","I","UP","D"]
+lint.ignore = ["D105","D107"]  # allow missing docstrings on magic/dunder & __init__
+docstring-convention = "google"

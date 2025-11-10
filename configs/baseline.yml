@@ -1,0 +1,27 @@
+# configs/baseline.yml
+run_name: "baseline_dummy_v0"
+seed: 13
+
+io:
+  out_dir: "logs/runs"
+
+target:
+  name: "openai:gpt-4o-mini"
+  params:
+    temperature: 0.1
+    max_tokens: 512
+
+red:
+  strategy: "basic_jailbreak_v0"
+  params:
+    variants: 3
+
+blue:
+  roles: ["judge_v0"]
+
+eval:
+  suites:
+    - name: "harmless"
+      path: "data/prompts/harmless.jsonl"
+    - name: "harmful_jailbreak"
+      path: "data/prompts/harmful_jailbreak.jsonl"
