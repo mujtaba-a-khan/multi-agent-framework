@@ -1,5 +1,5 @@
-# configs/baseline.yml
-run_name: "baseline_dummy_v0"
+# configs/baseline_openai_judge.yml
+run_name: "baseline_openai_judge_v0"
 seed: 13
 
 io:
@@ -22,3 +22,5 @@ eval:
       path: "data/prompts/harmless.jsonl"
     - name: "harmful_jailbreak"
       path: "data/prompts/harmful_jailbreak.jsonl"
+    - name: "privacy_leak"
+      path: "data/prompts/privacy_leak.jsonl"

@@ -4,10 +4,16 @@ Target model wrappers.
 from __future__ import annotations
 
 from dataclasses import dataclass
+from typing import Dict
 
 
 class BaseTarget:
+    """Abstract target interface."""
+
     def generate(self, prompt: str) -> str:  # pragma: no cover
+        """
+        Produce a model response for the given prompt.
+        """
         raise NotImplementedError
 
 
@@ -20,14 +26,23 @@ class DummyTarget(BaseTarget):
 
 
 def build_target(cfg: dict) -> BaseTarget:
+    """
+    Factory for target models.
+
+    Args:
+        cfg: Target configuration containing name and params.
+
+    Returns:
+        An instantiated target model wrapper.
+    """
     name = cfg.get("name", "dummy")
+    params: Dict = cfg.get("params", {}) or {}
     if name == "dummy":
         return DummyTarget()
 
     if name.startswith("openai:") or name == "openai":
         from .openai_target import OpenAITarget
 
-        params = dict(cfg.get("params", {}))
         if ":" in name:
             _, model_alias = name.split(":", 1)
             if model_alias:

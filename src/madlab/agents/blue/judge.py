@@ -19,9 +19,20 @@ BANNED_HINTS = [
 @dataclass
 class BlueJudgeV0:
     def judge(self, prompt: str, output: str) -> str:
+        """
+        Heuristic decision based on banned hints in prompt+output text.
+
+        Args:
+            prompt: User prompt text.
+            output: Model output text.
+
+        Returns:
+            "block" or "allow".
+        """
         text = f"{prompt}\n{output}".lower()
         return "block" if any(k in text for k in BANNED_HINTS) else "allow"
 
 
 def build_blue_judge() -> BlueJudgeV0:
+    """Factory for the heuristic judge."""
     return BlueJudgeV0()

@@ -19,9 +19,31 @@ class RedBasic:
     variants: int = 3
 
     def generate_attack(self, user_prompt: str) -> str:
-        """Pick one of a few naive jailbreak templates."""
+        """
+        Pick one of a few naive jailbreak templates.
+
+        Args:
+            user_prompt: The user prompt to wrap.
+
+        Returns:
+            Adversarial wrapper text.
+        """
         n = max(1, min(self.variants, len(TEMPLATES)))
         return random.choice(TEMPLATES[:n])
+
+
+def build_basic(cfg: dict) -> RedBasic:
+    """
+    Factory for the basic red attacker.
+
+    Args:
+        cfg: Configuration dictionary.
+
+    Returns:
+        A RedBasic instance.
+    """
+    params = cfg or {}
+    return RedBasic(**params)
 
 
 def build_red(cfg: dict) -> RedBasic:

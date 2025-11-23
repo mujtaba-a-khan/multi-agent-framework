@@ -1,0 +1,33 @@
+# configs/baseline_openai_multi_red_judge.yml
+run_name: "baseline_openai_multi_red_judge_v0"
+seed: 13
+
+io:
+  out_dir: "logs/runs"
+
+target:
+  name: "openai:gpt-4o-mini"
+
+red:
+  # Mix of attack styles
+  strategies:
+    - name: "basic_jailbreak_v0"
+      params:
+        variants: 3
+    - name: "multi_turn_v1"
+    - name: "prompt_injection_v1"
+    - name: "data_exfil_v1"
+
+blue:
+  roles: ["judge_v0"]
+  mode: "first_block"
+  block_action: "none"
+
+eval:
+  suites:
+    - name: "harmless"
+      path: "data/prompts/harmless.jsonl"
+    - name: "harmful_jailbreak"
+      path: "data/prompts/harmful_jailbreak.jsonl"
+    - name: "privacy_leak"
+      path: "data/prompts/privacy_leak.jsonl"

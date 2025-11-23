@@ -1,10 +1,18 @@
 openai:
   gpt-4o-mini:
     model: "gpt-4o-mini"
-    temperature: 0.2
-    max_tokens: 512
+    temperature: 0.1
+    max_tokens: 256
+  gpt-4o:
+    model: "gpt-4o"
+    temperature: 0.1
+    max_tokens: 256
+
 local:
-  llama-3-8b:
-    endpoint: "http://localhost:11434"
+  llama3-8b:
+    # Served via an OpenAI-compatible endpoint; URL comes from .env (LOCAL_LLM_BASE_URL)
     model: "llama3:8b"
     temperature: 0.2
+    max_tokens: 512
+    api_key_env: "LOCAL_LLM_API_KEY"
+    base_url_env: "LOCAL_LLM_BASE_URL"
