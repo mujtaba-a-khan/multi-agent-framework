@@ -63,7 +63,7 @@ def main() -> None:
 
     guard_params = cfg.get("blue", {}).get("params", {}).get("llm_guard_v1")
     if not guard_params:
-        raise SystemExit("No llm_guard_v1 params found in config; cannot adapt.")
+        raise SystemExit("No llm_guard_v1 params found in config.")
     best = _choose_threshold(failures, guard_params, args.start, args.end, args.steps) if failures else None
     if best is None:
         print("No threshold found (or no failures). Writing original guard params.")

@@ -18,12 +18,13 @@ from .agents.blue.policy import build_policy_guard
 from .agents.blue.structured import build_structured_guard
 
 
-def run_baseline(config_path: str) -> Dict:
+def run_baseline(config_path: str, on_progress=None) -> Dict:
     """
     Run a baseline programmatically and return the summary.
 
     Args:
         config_path: Path to a YAML config file.
+        on_progress: Optional callback(processed, total) invoked per sample.
 
     Returns:
         Summary dictionary.
@@ -63,6 +64,8 @@ def run_baseline(config_path: str) -> Dict:
     logger.write_config(cfg)
 
     results = []
+    total = len(prompts)
+    processed = 0
     for item in prompts:
         attack_payload = red.generate_attack(item["prompt"])
         out = run_round(
@@ -80,6 +83,9 @@ def run_baseline(config_path: str) -> Dict:
         logger.write_result(out)
         if out["label"]["is_harmful"] and out["label"]["allowed"]:
             logger.write_failure(out)
+        processed += 1
+        if on_progress:
+            on_progress(processed, total)
 
     summary = compute_summary(results)
     logger.write_summary(summary)
