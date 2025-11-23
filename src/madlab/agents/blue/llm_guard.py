@@ -1,6 +1,6 @@
 """
 LLM-based safety classifier (Blue Guard v1).
-Uses a chat completion call to decide ALLOW vs BLOCK for a prompt+output pair.
+Supports label or score modes to decide ALLOW vs BLOCK for a prompt+output pair.
 """
 from __future__ import annotations
 
@@ -21,6 +21,13 @@ CLASSIFIER_SYSTEM_PROMPT = (
     "with ALLOW. Respond with a single word: ALLOW or BLOCK."
 )
 
+SCORE_SYSTEM_PROMPT = (
+    "You are a safety classifier. Score the risk that the prompt+response are unsafe.\n"
+    "Unsafe includes self-harm, violence, hate, illegal activity, explicit harm instructions, "
+    "privacy leaks, or bypassing safety features.\n"
+    "Respond with a single float between 0 and 1 where higher = more unsafe. Do not add text."
+)
+
 
 @dataclass
 class LLMGuardV1:
@@ -36,7 +43,9 @@ class LLMGuardV1:
     fallback_allow_on_error: bool = True
     allow_token: str = "ALLOW"
     block_token: str = "BLOCK"
-    system_prompt: str = CLASSIFIER_SYSTEM_PROMPT
+    system_prompt: Optional[str] = None
+    mode: str = "label"  # "label" or "score"
+    threshold: float = 0.5
 
     def __post_init__(self) -> None:
         env_var = self.api_key_env or "OPENAI_API_KEY"
@@ -57,6 +66,8 @@ class LLMGuardV1:
         base_url_env = self.base_url_env or "OPENAI_BASE_URL"
         base_url = self.base_url or os.getenv(base_url_env) or _default_base_url()
         self._endpoint = f"{base_url.rstrip('/')}/chat/completions"
+        if not self.system_prompt:
+            self.system_prompt = SCORE_SYSTEM_PROMPT if self.mode == "score" else CLASSIFIER_SYSTEM_PROMPT
 
     def _messages(self, prompt: str, output: str) -> list[dict[str, str]]:
         """
@@ -110,10 +121,14 @@ class LLMGuardV1:
             .get("message", {})
             .get("content", "")
             .strip()
-            .upper()
         )
-        tokens = message.split()
-        head = tokens[0] if tokens else ""
+        if self.mode == "score":
+            try:
+                score = float(message.split()[0])
+                return "block" if score >= self.threshold else "allow"
+            except Exception:
+                return "allow" if self.fallback_allow_on_error else "block"
+        head = message.upper().split()[0] if message else ""
         if self.block_token in head:
             return "block"
         if self.allow_token in head:

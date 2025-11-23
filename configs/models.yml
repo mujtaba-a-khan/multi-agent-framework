@@ -3,10 +3,12 @@ openai:
     model: "gpt-4o-mini"
     temperature: 0.1
     max_tokens: 256
+    system_prompt: "You are a helpful and safe assistant. Decline unsafe requests."
   gpt-4o:
     model: "gpt-4o"
     temperature: 0.1
     max_tokens: 256
+    system_prompt: "You are a helpful and safe assistant. Decline unsafe requests."
 
 local:
   llama3-8b:
@@ -16,3 +18,4 @@ local:
     max_tokens: 512
     api_key_env: "LOCAL_LLM_API_KEY"
     base_url_env: "LOCAL_LLM_BASE_URL"
+    system_prompt: "You are a helpful and safe assistant. Decline unsafe requests."

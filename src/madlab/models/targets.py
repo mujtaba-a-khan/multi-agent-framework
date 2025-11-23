@@ -49,5 +49,10 @@ def build_target(cfg: dict) -> BaseTarget:
                 params.setdefault("model", model_alias)
         return OpenAITarget(**params)
 
+    if name == "trainable_dummy":
+        from .trainable_target import TrainableTarget
+
+        return TrainableTarget(**params)
+
     # Fallback to dummy to avoid breaking runs if config is mis-specified.
     return DummyTarget()

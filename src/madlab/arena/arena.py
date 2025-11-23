@@ -62,16 +62,16 @@ def run_round(
 
         blue_decision = "allow"
         t_blue0 = time.perf_counter()
+        def decide(role):
+            kwargs = {"prompt": prompt, "output": target_output}
+            return role.judge(**kwargs)
+
         if blue_mode == "all":
-            decisions = []
-            for role in blue:
-                verdict = role.judge(prompt=prompt, output=target_output)
-                decisions.append(verdict)
+            decisions = [decide(role) for role in blue]
             blue_decision = "block" if any(v == "block" for v in decisions) else "allow"
         else:  # default: short-circuit on block
             for role in blue:
-                verdict = role.judge(prompt=prompt, output=target_output)
-                if verdict == "block":
+                if decide(role) == "block":
                     blue_decision = "block"
                     break
         t_blue1 = time.perf_counter()

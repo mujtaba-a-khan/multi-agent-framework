@@ -35,6 +35,29 @@ blue:
       fallback_allow_on_error: true
       allow_token: "ALLOW"
       block_token: "BLOCK"
+      mode: "score"
+      threshold: 0.5
+    structured_v1:
+      denylist:
+        - "ignore safety"
+        - "disable safety"
+        - "jailbreak"
+        - "prompt injection"
+        - "drop table"
+        - "rm -rf"
+      injection_patterns:
+        - "ignore system"
+        - "disregard instructions"
+      regex_patterns:
+        - "(rewrite|ignore).*system prompt"
+        - "strip safety filters"
+      require_signature: false
+      require_allowlist: true
+      allowed_actions:
+        - "READ"
+        - "SUMMARIZE"
+        - "CLASSIFY"
+        - "REFUSE"
     policy_v1:
       patterns:
         - "ignore safety"

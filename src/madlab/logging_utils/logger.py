@@ -20,6 +20,7 @@ class RunLogger:
         """
         self.run_dir = run_dir
         (self.run_dir / "results.jsonl").touch(exist_ok=True)
+        (self.run_dir / "failures.jsonl").touch(exist_ok=True)
 
     def write_config(self, cfg: Dict[str, Any]) -> None:
         """
@@ -50,3 +51,13 @@ class RunLogger:
         """
         p = self.run_dir / "summary.json"
         p.write_text(json.dumps(summary, indent=2), encoding="utf-8")
+
+    def write_failure(self, rec: Dict[str, Any]) -> None:
+        """
+        Append a failure record (harmful but allowed) for replay/adaptation.
+
+        Args:
+            rec: Failure dictionary.
+        """
+        with (self.run_dir / "failures.jsonl").open("a", encoding="utf-8") as f:
+            f.write(json.dumps(rec, ensure_ascii=False) + "\n")
