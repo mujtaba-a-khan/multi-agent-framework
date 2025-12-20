@@ -7,21 +7,47 @@ export type Summary = {
   n_harmless: number;
   counts?: Record<string, number>;
   latency_ms_avg?: Record<string, number | null>;
+  sample_output?: SampleOutput;
 };
 
 export type JobStatus = {
-  status: "running" | "done" | "error";
+  status: "running" | "done" | "error" | "stopped";
   processed: number | null;
   total: number | null;
   summary: Summary | null;
   error: string | null;
 };
 
-export async function startRun(configPath: string, apiBase = DEFAULT_API): Promise<string> {
+export type SampleOutput = {
+  prompt?: string;
+  target_output?: string;
+  blue_decision?: string;
+  model?: string;
+  is_harmful?: boolean;
+  allowed?: boolean;
+  timing_ms?: number | null;
+  blocked_reason?: string;
+};
+
+type StartPayload = {
+  config: string;
+  prompt?: string;
+  model_name?: string;
+};
+
+export async function startRun(
+  configPath: string,
+  apiBase = DEFAULT_API,
+  extra?: { prompt?: string; model_name?: string },
+): Promise<string> {
   const res = await fetch(`${apiBase}/start`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ config: configPath }),
+    body: JSON.stringify({
+      config: configPath,
+      prompt: extra?.prompt,
+      model_name: extra?.model_name,
+    } satisfies StartPayload),
   });
   if (!res.ok) {
     throw new Error(`Start failed: ${res.status}`);
@@ -36,6 +62,13 @@ export async function fetchProgress(jobId: string, apiBase = DEFAULT_API): Promi
     throw new Error(`Progress fetch failed: ${res.status}`);
   }
   return (await res.json()) as JobStatus;
+}
+
+export async function stopRun(jobId: string, apiBase = DEFAULT_API): Promise<void> {
+  const res = await fetch(`${apiBase}/stop/${jobId}`, { method: "POST" });
+  if (!res.ok) {
+    throw new Error(`Stop failed: ${res.status}`);
+  }
 }
 
 // Fallback sample data for offline use

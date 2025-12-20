@@ -10,7 +10,6 @@ from pathlib import Path
 from madlab.cli import load_jsonl
 from madlab.agents.blue.llm_guard import build_llm_guard
 
-
 def main() -> None:
     p = argparse.ArgumentParser()
     p.add_argument("--dev", required=True, help="Path to labeled JSONL with is_harmful field.")
