@@ -32,6 +32,11 @@ const INPUT_MODES = [
   { label: "Upload prompt file", value: "upload" },
   { label: "Custom prompt", value: "custom" },
 ];
+const formatDateTime = (v?: string) => {
+  if (!v) return "—";
+  const d = new Date(v);
+  return isNaN(d.getTime()) ? v : d.toLocaleString();
+};
 const emptySummary: Summary = {
   ASR: 0,
   FPR: 0,
@@ -187,6 +192,7 @@ export default function App() {
   const [customPrompt, setCustomPrompt] = useState("");
   const [inputMode, setInputMode] = useState<"upload" | "custom">("custom");
   const [uploadName, setUploadName] = useState<string | null>(null);
+  const [uploadContent, setUploadContent] = useState<string | null>(null);
   const modelOptions = [
     { label: "gpt-4o-mini", value: "gpt-4o-mini" },
     { label: "gpt-4o", value: "gpt-4o" },
@@ -208,9 +214,14 @@ export default function App() {
   const runJob = async (cfg: string, setState: React.Dispatch<React.SetStateAction<RunState>>) => {
     setState((s) => ({ ...s, loading: true, error: null, status: "running", progress: { processed: 0, total: null }, jobId: null }));
     try {
+      if (inputMode === "upload" && !uploadContent) {
+        throw new Error("Please choose a prompt file before launching.");
+      }
       const jobId = await startRun(cfg, apiBase, {
         prompt: inputMode === "custom" ? customPrompt || undefined : undefined,
         model_name: targetModel || undefined,
+        upload_name: inputMode === "upload" ? uploadName || undefined : undefined,
+        upload_content: inputMode === "upload" ? uploadContent || undefined : undefined,
       });
       setState((s) => ({ ...s, jobId }));
       const poll = async () => {
@@ -319,6 +330,7 @@ export default function App() {
   ];
   const metricsSummary = defState.summary || rawState.summary || emptySummary;
   const latestSample = metricsSummary.sample_output;
+  const runInfo = metricsSummary.run_info;
 
   return (
     <div className="app-shell">
@@ -397,6 +409,13 @@ export default function App() {
                     onChange={(e) => {
                       const file = e.target.files?.[0];
                       setUploadName(file ? file.name : null);
+                      if (file) {
+                        const reader = new FileReader();
+                        reader.onload = () => setUploadContent(reader.result as string);
+                        reader.readAsText(file);
+                      } else {
+                        setUploadContent(null);
+                      }
                     }}
                   />
                   <div className="muted small">File name: {uploadName || "No file selected"}</div>
@@ -429,6 +448,11 @@ export default function App() {
               <div className="config-number">
                 {formatNumber((rawState.summary?.n ?? rawState.progress.processed ?? 0) + (defState.summary?.n ?? defState.progress.processed ?? 0))}
               </div>
+            </div>
+            <div className="config-summary-card">
+              <div className="muted small">Last Run</div>
+              <div className="config-number smallish">{formatDateTime(runInfo?.run_started_at)}</div>
+              <div className="muted small">Source: {runInfo?.source || "config_suites"}</div>
             </div>
           </div>
         </section>
@@ -612,6 +636,7 @@ export default function App() {
           background: linear-gradient(135deg, #f8fbff, #eef3ff);
         }
         .config-number { font-size: 32px; font-weight: 800; margin-top: 6px; }
+        .config-number.smallish { font-size: 18px; }
         .stat-card { padding: 14px; }
         .stat-label { color: var(--muted); font-size: 12px; }
         .stat-value { font-size: 22px; font-weight: 800; margin-top: 6px; }

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 from pathlib import Path
 import threading
+import datetime
 from typing import Dict, List, Optional
 
 from .cli import load_jsonl, _build_red_agents
@@ -55,12 +56,32 @@ def _infer_prompt_harmful(prompt: str, target_output: str, blue_params: dict) ->
     return is_harmful, guard_block, model_refused
 
 
+def _normalize_prompt_record(rec: Dict, idx: int) -> Optional[Dict]:
+    """
+    Ensure a record has a `prompt` field and sensible defaults.
+    """
+    prompt = rec.get("prompt") or rec.get("text")
+    if not prompt:
+        return None
+    out = dict(rec)
+    out["prompt"] = prompt
+    out.setdefault("id", rec.get("id") or f"rec_{idx}")
+    if "is_harmful" not in out:
+        label_raw = rec.get("label")
+        try:
+            out["is_harmful"] = bool(float(label_raw)) if label_raw is not None else False
+        except Exception:
+            out["is_harmful"] = False
+    return out
+
+
 def run_baseline(
     config_path: str,
     on_progress=None,
     stop_event: Optional[threading.Event] = None,
     prompt_override: Optional[str] = None,
     target_override: Optional[str] = None,
+    prompts_path: Optional[str] = None,
 ) -> Dict:
     """
     Run a baseline programmatically and return the summary.
@@ -84,6 +105,7 @@ def run_baseline(
         target_cfg["name"] = name
         cfg["target"] = target_cfg
 
+    started_at = datetime.datetime.utcnow().isoformat() + "Z"
     out_dir = Path(cfg["io"]["out_dir"])
     out_dir.mkdir(parents=True, exist_ok=True)
     run_dir = out_dir / cfg.get("run_name", "run_api") / "last_run"
@@ -112,12 +134,22 @@ def run_baseline(
     if prompt_override:
         # Placeholder label; will be updated after guard-based inference.
         prompts = [{"prompt": prompt_override, "id": "custom_1", "is_harmful": False, "_suite": "custom"}]
+    elif prompts_path:
+        for idx, rec in enumerate(load_jsonl(Path(prompts_path)), start=1):
+            norm = _normalize_prompt_record(rec, idx)
+            if not norm:
+                continue
+            norm["_suite"] = rec.get("_suite", "upload")
+            prompts.append(norm)
     else:
         suites = [suite for suite in cfg["eval"]["suites"]]
         for s in suites:
-            for rec in load_jsonl(Path(s["path"])):
-                rec["_suite"] = s["name"]
-                prompts.append(rec)
+            for idx, rec in enumerate(load_jsonl(Path(s["path"])), start=1):
+                norm = _normalize_prompt_record(rec, idx)
+                if not norm:
+                    continue
+                norm["_suite"] = s["name"]
+                prompts.append(norm)
 
     logger = RunLogger(run_dir)
     logger.write_config(cfg)
@@ -158,6 +190,11 @@ def run_baseline(
             break
 
     summary = compute_summary(results)
+    summary["run_info"] = {
+        "run_started_at": started_at,
+        "source": prompts_path or ("custom_prompt" if prompt_override else "config_suites"),
+        "run_dir": str(run_dir),
+    }
     if results:
         first = results[0]
         summary["sample_output"] = {

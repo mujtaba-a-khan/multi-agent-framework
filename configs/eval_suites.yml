@@ -2,3 +2,4 @@
 suites:
   harmless: data/prompts/harmless.jsonl
   harmful_jailbreak: data/prompts/harmful_jailbreak.jsonl
+  uploaded_prompts: data/prompts/prompts.jsonl

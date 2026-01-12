@@ -8,6 +8,7 @@ export type Summary = {
   counts?: Record<string, number>;
   latency_ms_avg?: Record<string, number | null>;
   sample_output?: SampleOutput;
+  run_info?: RunInfo;
 };
 
 export type JobStatus = {
@@ -29,16 +30,24 @@ export type SampleOutput = {
   blocked_reason?: string;
 };
 
+export type RunInfo = {
+  run_started_at?: string;
+  source?: string;
+  run_dir?: string;
+};
+
 type StartPayload = {
   config: string;
   prompt?: string;
   model_name?: string;
+  upload_name?: string;
+  upload_content?: string;
 };
 
 export async function startRun(
   configPath: string,
   apiBase = DEFAULT_API,
-  extra?: { prompt?: string; model_name?: string },
+  extra?: { prompt?: string; model_name?: string; upload_name?: string; upload_content?: string },
 ): Promise<string> {
   const res = await fetch(`${apiBase}/start`, {
     method: "POST",
@@ -47,6 +56,8 @@ export async function startRun(
       config: configPath,
       prompt: extra?.prompt,
       model_name: extra?.model_name,
+      upload_name: extra?.upload_name,
+      upload_content: extra?.upload_content,
     } satisfies StartPayload),
   });
   if (!res.ok) {
